@@ -1,5 +1,4 @@
-# Transitioning360: 
-# Content-aware NFoV Virtual Camera Paths for 360° Video Playback
+## Transitioning360: Content-aware NFoV Virtual Camera Paths for 360° Video Playback
 
 
 #### Miao Wang, Yi-Jun Li, Wen-Xuan Zhang, Christian Richardt, Shi-Min Hu.
