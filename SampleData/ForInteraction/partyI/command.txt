@@ -1,0 +1,3 @@
+cam = 3
+blendsaliencyWeight = 1
+blendMaskWeight = 0

@@ -1,0 +1,5 @@
+texturemaxlengthscale = 16
+cam = 3
+blendsaliencyWeight = 1
+blendMaskWeight = 0
+output = standard10cam=3
