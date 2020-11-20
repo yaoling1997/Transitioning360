@@ -1,0 +1,84 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+#define thread_x 6
+#define thread_y 6
+
+
+RWStructuredBuffer<float> preF;
+RWStructuredBuffer<float> downsamplePixelSaliency;
+RWStructuredBuffer<float2> downsamplePixelOpticalFlow;
+RWStructuredBuffer<float> nowF;//state
+RWStructuredBuffer<int> nowP;//dp path
+int downsampleWidth, downsampleHeight;
+int updateRadius;
+float w0;
+
+float MyAbs(float x) {
+	if (x < 0)
+		return -x;
+	return x;
+}
+float L1Norm(float2 v) {
+	return MyAbs(v.x) + MyAbs(v.y);
+}
+
+//Get the vector between two pixels
+float2 GetVector2Of2Pixels(float2 p1, float2 p2, float w)
+{
+	float vx = p2.x - p1.x;
+	if (vx > w / 2)
+		vx -= w;
+	else if (vx < -w / 2)
+		vx += w;
+	return float2(vx, p2.y - p1.y);
+}
+
+[numthreads(6,6,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	int thread_group_x = 1;
+	int thread_group_y = 1;
+	int index = id.x + (id.y*thread_x*thread_group_x) + (id.z*thread_group_x*thread_group_y* thread_x * thread_y);
+	float ans = 1e9f;
+	int p = 0;
+	int i = index / downsampleHeight;
+	int j = index % downsampleHeight;
+	for (int k = i - updateRadius; k <= i + updateRadius; k++) {
+		int zl = j - updateRadius;
+		if (zl < 0)
+			zl = 0;
+		int zr = j + updateRadius;
+		if (zr > downsampleHeight - 1)
+			zr = downsampleHeight - 1;
+
+		for (int z = zl; z <= zr; z++)
+		{
+			int ii = k;
+			int jj = z;
+			if (ii < 0)
+				ii += downsampleWidth;
+			if (ii >= downsampleWidth)
+				ii -= downsampleWidth;
+			if (jj < 0)
+				jj = 0;
+			else if (jj >= downsampleHeight)
+				jj = downsampleHeight - 1;
+			int preIndex = ii * downsampleHeight + jj;			
+			float2 v = GetVector2Of2Pixels(float2(ii, jj), float2(i, j), downsampleWidth);
+			float value = MyAbs(1 - downsamplePixelSaliency[index]) + preF[preIndex] + w0 * L1Norm(v - downsamplePixelOpticalFlow[preIndex]);
+			if (ans > value)
+			{
+				ans = value;
+				p = preIndex;
+			}
+		}
+	}
+	nowF[index] = ans;
+	nowP[index] = p;
+}
+
+

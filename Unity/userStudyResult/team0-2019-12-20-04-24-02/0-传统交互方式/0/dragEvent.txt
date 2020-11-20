@@ -1,0 +1,7 @@
+playTimes=2
+0
+EventNum=0
+dragDistance=0.0
+1
+EventNum=1
+dragDistance=334.6

@@ -1,0 +1,115 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+#define thread_x 6
+#define thread_y 6
+
+//A maximum of eight such parameters are defined
+
+RWStructuredBuffer<float> preF;
+RWStructuredBuffer<float> downsamplePixelSaliency;
+RWStructuredBuffer<float2> downsamplePixelOpticalFlow;
+RWStructuredBuffer<float> nowF;//state
+RWStructuredBuffer<int> nowP;//dp path
+RWStructuredBuffer<float2> preCameraPreKeyFramePos;
+RWStructuredBuffer<float2> preCameraNowKeyFramePos;
+int downsampleWidth, downsampleHeight;
+int updateRadius;
+float w0;
+float w1;
+float preCamPosTheta;
+float preCamVelTheta;
+bool ifAddCamSimilarity;
+float wop;
+int camId;
+
+float MyAbs(float x) {
+	if (x < 0)
+		return -x;
+	return x;
+}
+float L1Norm(float2 v) {
+	return MyAbs(v.x) + MyAbs(v.y);
+}
+float GaussianFunction(float xSeg, float ySeg, float thetax, float thetay) {
+	float A = 1;
+	float n = -(xSeg * xSeg / (2 * thetax * thetax) + ySeg * ySeg / (2 * thetay * thetay));
+	return A * exp(n);
+}
+float GaussianFunction(float2 p0, float2 p, float thetax, float thetay, float w) {
+	float xSeg = min(abs(p.x - p0.x), w - abs(p.x - p0.x));
+	float ySeg = p.y - p0.y;
+	return GaussianFunction(xSeg, ySeg, thetax, thetay);
+}
+float GaussianFunction(float2 p0, float2 p, float thetax, float thetay) {
+	float xSeg = p.x - p0.x;
+	float ySeg = p.y - p0.y;
+	return GaussianFunction(xSeg, ySeg, thetax, thetay);
+}
+//Get the vector between two pixels
+float2 GetVector2Of2Pixels(float2 p1, float2 p2, float w)
+{
+	float vx = p2.x - p1.x;
+	if (vx > w / 2)
+		vx -= w;
+	else if (vx < -w / 2)
+		vx += w;
+	return float2(vx, p2.y - p1.y);
+}
+
+[numthreads(6,6,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{	
+	int thread_group_x = 1;
+	int thread_group_y = 1;
+	int index = id.x + (id.y*thread_x*thread_group_x) + (id.z*thread_group_x*thread_group_y* thread_x * thread_y);
+	float ans = 1e9f;
+	int p = 0;
+	int i = index / downsampleHeight;
+	int j = index % downsampleHeight;
+	for (int k = i - updateRadius; k <= i + updateRadius; k++) {
+		int zl = j - updateRadius;
+		if (zl < 0)
+			zl = 0;
+		int zr = j + updateRadius;
+		if (zr > downsampleHeight - 1)
+			zr = downsampleHeight - 1;
+
+		for (int z = zl; z <= zr; z++)
+		{
+			int ii = k;
+			int jj = z;			
+			if (ii < 0)
+				ii += downsampleWidth;
+			if (ii >= downsampleWidth)
+				ii -= downsampleWidth;
+			if (jj < 0)
+				jj = 0;
+			else if (jj >= downsampleHeight)
+				jj = downsampleHeight - 1;
+			int preIndex = ii * downsampleHeight + jj;			
+			float2 v = GetVector2Of2Pixels(float2(ii, jj), float2(i, j), downsampleWidth);
+			float camSimilarity = 0;
+			if (ifAddCamSimilarity) {
+				for (int preCamId = 0; preCamId < camId; preCamId++) {
+					float2 preV = GetVector2Of2Pixels(preCameraPreKeyFramePos[preCamId], preCameraNowKeyFramePos[preCamId], downsampleWidth);
+					camSimilarity += GaussianFunction(preCameraPreKeyFramePos[preCamId], float2(ii, jj), preCamPosTheta, preCamPosTheta,downsampleWidth)*
+						GaussianFunction(preV, v, preCamVelTheta, preCamVelTheta);
+				}
+			}			
+			float value = MyAbs(1 - downsamplePixelSaliency[index]) + preF[preIndex] + w0 * L1Norm(v - downsamplePixelOpticalFlow[preIndex]) + w1 * camSimilarity;
+			if (ans > value)
+			{
+				ans = value;
+				p = preIndex;
+			}
+		}
+	}
+	nowF[index] = ans;
+	nowP[index] = p;
+}
+
+

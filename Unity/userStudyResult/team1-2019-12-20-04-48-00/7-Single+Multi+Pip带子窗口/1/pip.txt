@@ -1,0 +1,70 @@
+playTimes=23
+0
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+1
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+2
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+3
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+4
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+5
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+6
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+7
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+8
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+9
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+10
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+11
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+12
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+13
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+14
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+15
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+16
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+17
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+18
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+19
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+20
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+21
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+22
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)

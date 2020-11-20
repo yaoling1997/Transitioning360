@@ -1,0 +1,180 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+#define thread_x 5
+#define thread_y 9
+#define max_cam_num 5
+
+//A maximum of eight such parameters are defined
+
+RWStructuredBuffer<float> twoRectOverlapArea;
+RWStructuredBuffer<float> singleRectArea;
+RWStructuredBuffer<float> preF;
+RWStructuredBuffer<float> downsamplePixelSaliency;
+RWStructuredBuffer<float2> downsamplePixelOpticalFlow;
+RWStructuredBuffer<float> nowF;//state
+RWStructuredBuffer<int> nowP;//dp path
+
+RWStructuredBuffer<float> salEResult;
+int dpWidth, dpHeight;
+int camGroupNum;
+float w0;
+float overlapWeight;
+float theta;
+int thread_group_x;
+int thread_group_y;
+
+int frame;
+
+bool withoutOverlapItem;
+
+float MyAbs(float x) {
+	if (x < 0)
+		return -x;
+	return x;
+}
+float L1Norm(float2 v) {
+	return MyAbs(v.x) + MyAbs(v.y);
+}
+void Test(out int2 a[3]) {
+	a[0] = 1;
+}
+void DecodeMethod3Status(int s, int camGroupNum, int dpWidth, int dpHeight,out int2 re[max_cam_num]) {	
+	int dpSize = dpWidth * dpHeight;
+	for (int i = 0; i < camGroupNum; i++) {
+		int tmp = s % dpSize;
+		re[i] = int2(tmp / dpHeight, tmp % dpHeight);
+		s /= dpSize;
+	}	
+}
+int2 NormalizePixelInRange(int x, int y, int width, int height) {
+	if (x < 0)
+		x += width;
+	else if (x >= width)
+		x -= width;
+	
+	if (y < 0)
+		y = 0;
+	else if (y >= height)
+		y = height - 1;
+	return int2(x, y);
+}
+int2 NormalizePixelInRange(int2 size, int width, int height) {
+	return NormalizePixelInRange(size.x, size.y, width, height);
+}
+
+float GaussianFunction(float x0, float y0, float x, float y, float thetax, float thetay) {
+	float A = 1;
+	float xSeg = min(abs(x - x0), dpWidth - abs(x - x0));
+	float ySeg = y - y0;
+	float n = -(xSeg * xSeg / (2 * thetax * thetax) + ySeg * ySeg / (2 * thetay * thetay));
+	return A * exp(n);
+}
+
+[numthreads(thread_x, thread_y,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	int index = id.x + (id.y*thread_x*thread_group_x) + (id.z*thread_group_x*thread_group_y* thread_x * thread_y);
+	float ans = 1e9f;
+	int p = 0;
+	int2 camPosList[max_cam_num];
+	DecodeMethod3Status(index, camGroupNum, dpWidth, dpHeight,camPosList);
+	float salE = 0;
+	for (int camId = 0; camId < camGroupNum; camId++)
+	{
+		int2 pos = camPosList[camId];
+		float s = downsamplePixelSaliency[pos.x*dpHeight + pos.y];		
+		float c = 1;
+		float area = singleRectArea[pos.x*dpHeight + pos.y];//The area of the currently considered window
+		for (int i = 0; i < camGroupNum; i++) {
+			if (i == camId)
+				continue;
+			int id = (pos.x*dpHeight + pos.y)*dpWidth*dpHeight + (camPosList[i].x*dpHeight + camPosList[i].y);
+			float I = twoRectOverlapArea[id];
+			float U = singleRectArea[pos.x*dpHeight + pos.y]+ singleRectArea[camPosList[i].x*dpHeight + camPosList[i].y];						
+			U -= I;
+			area -= twoRectOverlapArea[id] * overlapWeight;
+			float tmp = min(1, I / U * overlapWeight);
+			c = c*(1 - tmp);
+		}
+		area = max(area / singleRectArea[pos.x*dpHeight + pos.y], 0);
+		if (withoutOverlapItem)
+			salE += MyAbs(1 - s);
+		else
+			salE += MyAbs(1 - c * s);
+	}
+	if (frame == 0) {
+		ans = salE;
+	}
+	else {
+		int transferNum = 1;
+		int circleGridNum = 9;
+		int2 move[] = {
+			int2(-1,-1),
+			int2(-1,0),
+			int2(-1,1),
+			int2(0,-1),
+			int2(0,0),
+			int2(0,1),
+			int2(1,-1),
+			int2(1,0),
+			int2(1,1)
+		};
+		for (int i = 0; i < camGroupNum; i++) {
+			transferNum *= circleGridNum;
+		}
+		for (int transferId = 0; transferId < transferNum; transferId++) {
+			int2 preCamPosList[max_cam_num];
+			int tmp = transferId;
+			float velocityE = 0;
+
+			bool bl = true;
+			for (int camId = 0; camId < camGroupNum; camId++) {
+				int2 prePixel = camPosList[camId] + move[tmp%circleGridNum];
+				if (prePixel.y < 0 || prePixel.y >= dpHeight) {
+					bl = false;
+					break;
+				}					
+				preCamPosList[camId] = NormalizePixelInRange(prePixel, dpWidth, dpHeight);
+				tmp /= circleGridNum;
+			}
+
+			if (!bl)
+				continue;
+			int preIndex = 0;
+			for (int camId = camGroupNum-1; camId >=0; camId--) {
+				float value;
+				int ii = preCamPosList[camId].x;
+				int jj = preCamPosList[camId].y;
+				int i = camPosList[camId].x;
+				int j = camPosList[camId].y;
+				float vx = i - ii;
+				if (vx > dpWidth / 2)
+					vx -= dpWidth;
+				else if (vx < -dpWidth / 2)
+					vx += dpWidth;
+				float2 v = float2(vx, j - jj);
+								
+				value = w0 * L1Norm(v - downsamplePixelOpticalFlow[ii*dpHeight + jj]);//The coarse grid optical flow term is considered
+
+				velocityE += value;		
+				preIndex = preIndex * dpWidth*dpHeight + ii * dpHeight + jj;
+			}
+			
+			float newV = salE + velocityE + preF[preIndex];
+			if (ans > newV)
+			{
+				ans = newV;
+				p = preIndex;
+			}
+		}
+	}
+	salEResult[index] = salE;
+	nowF[index] = ans;
+	nowP[index] = p;
+}
+
+

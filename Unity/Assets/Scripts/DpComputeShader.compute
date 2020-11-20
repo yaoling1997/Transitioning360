@@ -1,0 +1,68 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+#define thread_x 6
+#define thread_y 6
+#define n 9
+//A maximum of eight such parameters are defined
+RWStructuredBuffer<int> gridNum;
+RWStructuredBuffer<int> preStateToUpdate;
+RWStructuredBuffer<int> preStateToUpdateSize;
+RWStructuredBuffer<float> motionCost;//Motion cost of single camera
+RWStructuredBuffer<float> fieldOfViewOverlapCost;//Overlap cost of two cameras
+RWStructuredBuffer<float> preState;
+RWStructuredBuffer<float> score;
+RWStructuredBuffer<float2> stateAndPath;//State and path
+
+float GetChangeCameraViewpointValue(int i, int u) {
+	int ou = preStateToUpdate[u*n+i];
+	float re = 0;
+	if (ou == u) {
+		re += score[u];
+	}
+	else {
+		re += (score[ou] + score[u]) *0.5;
+		re -= motionCost[u*n+i];
+	}
+	return re;
+}
+
+[numthreads(6,6,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{	
+	int thread_group_x = gridNum[0]/6;
+	int thread_group_y = thread_group_x;
+	int index = id.x + (id.y*thread_x*thread_group_x) + (id.z*thread_group_x*thread_group_y* thread_x * thread_y);
+	float ans = -1e9f;
+	int p = 0;
+	int w = index % gridNum[0];
+	int v = index / gridNum[0] % gridNum[0];
+	int u = index / gridNum[0] / gridNum[0];
+	float A = gridNum[0] * n*n;
+	float B = n * n;
+	for (int i = 0; i < preStateToUpdateSize[u]; i++)
+		for (int j = 0; j < preStateToUpdateSize[v]; j++)
+			for (int k = 0; k < preStateToUpdateSize[w]; k++) {
+				int ou = preStateToUpdate[u*n+i];
+				int ov = preStateToUpdate[v*n+j];
+				int ow = preStateToUpdate[w*n+k];
+				int preIndex = ou;
+				preIndex = preIndex * gridNum[0] + ov;
+				preIndex = preIndex * gridNum[0] + ow;
+				float tvu = GetChangeCameraViewpointValue(i, u);
+				float tvv = GetChangeCameraViewpointValue(j, v);
+				float tvw = GetChangeCameraViewpointValue(k, w);
+				float oc = fieldOfViewOverlapCost[u*A+v*B+i*n+j] + fieldOfViewOverlapCost[v*A+w*B+j*n+k] + fieldOfViewOverlapCost[w*A+u*B+k*n+i];
+				float newV = preState[preIndex] + tvu + tvv + tvw - oc;
+				if (ans < newV) {
+					ans = newV;
+					p = preIndex;
+				}
+			}
+	stateAndPath[index] = float2(ans,p);	
+}
+
+

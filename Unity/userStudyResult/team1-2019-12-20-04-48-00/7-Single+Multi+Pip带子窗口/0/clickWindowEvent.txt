@@ -1,0 +1,17 @@
+playTimes=8
+0
+EventNum=1
+1
+EventNum=1
+2
+EventNum=2
+3
+EventNum=1
+4
+EventNum=1
+5
+EventNum=0
+6
+EventNum=0
+7
+EventNum=1

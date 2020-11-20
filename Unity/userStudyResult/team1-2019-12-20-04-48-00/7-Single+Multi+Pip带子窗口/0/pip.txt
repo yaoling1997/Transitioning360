@@ -1,0 +1,25 @@
+playTimes=8
+0
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+1
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+2
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+3
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+4
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+5
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+6
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)
+7
+avePipWindowSize=(222.3, 222.3)
+finalPipWindowSize=(222.3, 222.3)

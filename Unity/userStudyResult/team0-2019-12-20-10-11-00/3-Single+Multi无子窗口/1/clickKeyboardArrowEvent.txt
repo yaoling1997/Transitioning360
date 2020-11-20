@@ -1,0 +1,7 @@
+playTimes=3
+0
+EventNum=1
+1
+EventNum=1
+2
+EventNum=1

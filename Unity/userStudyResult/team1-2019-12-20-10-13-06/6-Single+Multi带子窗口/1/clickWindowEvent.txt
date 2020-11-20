@@ -1,0 +1,11 @@
+playTimes=5
+0
+EventNum=0
+1
+EventNum=0
+2
+EventNum=0
+3
+EventNum=0
+4
+EventNum=0

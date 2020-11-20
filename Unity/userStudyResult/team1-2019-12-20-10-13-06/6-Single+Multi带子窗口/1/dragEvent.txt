@@ -1,0 +1,16 @@
+playTimes=5
+0
+EventNum=0
+dragDistance=0.0
+1
+EventNum=0
+dragDistance=0.0
+2
+EventNum=0
+dragDistance=0.0
+3
+EventNum=0
+dragDistance=0.0
+4
+EventNum=0
+dragDistance=0.0
