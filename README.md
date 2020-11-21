@@ -40,7 +40,7 @@ For Annotation, it's better to run in the editor mode.
 
 3.Click "Load" -> Choose data directory.
 
-4.wait...
+4.Wait...
 
 5.Click "Start".
 
