@@ -11,7 +11,7 @@
 <br>
 We present <i>Transitioning360</i>, a tool for 360° video navigation and playback on 2D displays by transitioning between multiple NFoV views that track potentially interesting targets or events. Our method computes virtual NFoV camera paths considering content awareness and diversity in an offline preprocess. During playback, the user can watch any NFoV view corresponding to a precomputed camera path. Moreover, our interface shows other candidate views, providing a sense of concurrent events. At any time, the user can transition to other candidate views for fast navigation and exploration.
 <br>
-- <a href="https://vimeo.com/456945096">Video</a> - <a href="https://researchportal.bath.ac.uk/files/211657571/Transitioning360_WangEtAl_ISMAR2020.pdf">Paper</a> - <a href="https://github.com/yaoling1997/Transitioning360/tree/master/Unity">Code</a> - </p>
+- <a href="https://vimeo.com/456945096">Video</a> - <a href="https://core.ac.uk/download/pdf/334410113.pdf">Paper</a> - <a href="https://github.com/yaoling1997/Transitioning360/tree/master/Unity">Code</a> - </p>
 
 Platform: Win-64
 
