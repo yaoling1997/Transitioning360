@@ -45,3 +45,6 @@ For Annotation, it's better to run in the editor mode.
 5.Click "Start".
 
 For Interaction, it's better to run after built.
+
+Relative video tutorial:
+[How To Run Transitioning360 Player](https://www.youtube.com/watch?v=CfEacIJVZIw)
